@@ -1,0 +1,9 @@
+node_modules*
+package-lock.json
+.idea/*
+.idea/workspace.xml
+.idea/*iml
+config/devLocal.json
+config/local.json
+config/dev.json
+newrelic_agent.log
