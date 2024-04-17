@@ -29,6 +29,12 @@ exports.replaceFont = async(apiReference, files)=>{
     // Get the font value from file A
     const fontTagA = xpath.select1("//*[local-name()='rFonts']", fileADom);
     const font = fontTagA.getAttribute('w:ascii');
+
+    if (files.subTemplate) {
+
+      for (let i = 0; i < requestFile.subTemplate.length; i++) {
+      }
+    }
     
     // Read content of file B (document.xml)
     let fileBContent = await fs.readFile(subTemp + "/word/document.xml", 'utf-8');

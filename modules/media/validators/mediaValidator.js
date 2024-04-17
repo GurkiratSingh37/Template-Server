@@ -22,24 +22,17 @@ const uploadFile =async (req, res, next) => {
       name              : Joi.string().required(),
       type              : Joi.string().required()
     }).required(),
-    subTemplate1      : Joi.object().keys({
-      fieldName         : Joi.string().required(),
-      originalFilename  : Joi.string().required(),
-      path              : Joi.string().required(),
-      headers           : Joi.any().required(),
-      size              : Joi.number().required(),
-      name              : Joi.string().required(),
-      type              : Joi.string().required()
-    }).optional(),
-    subTemplate2      : Joi.object().keys({
-      fieldName         : Joi.string().required(),
-      originalFilename  : Joi.string().required(),
-      path              : Joi.string().required(),
-      headers           : Joi.any().required(),
-      size              : Joi.number().required(),
-      name              : Joi.string().required(),
-      type              : Joi.string().required()
-    }).optional(),
+    subTemplate: Joi.array().items(
+      Joi.object().keys({
+        fieldName: Joi.string().required(),
+        originalFilename: Joi.string().required(),
+        path: Joi.string().required(),
+        headers: Joi.any().required(),
+        size: Joi.number().required(),
+        name: Joi.string().required(),
+        type: Joi.string().required(),
+      })
+    ).optional(),
     // entity    : Joi.string().required(),
     searchText: Joi.string().required()
   });
