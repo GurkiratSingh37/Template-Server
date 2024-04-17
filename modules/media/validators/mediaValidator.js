@@ -34,11 +34,11 @@ const uploadFile =async (req, res, next) => {
       })
     ).optional(),
     // entity    : Joi.string().required(),
-    searchText: Joi.string().required()
+    // searchText: Joi.string().required()
   });
   let reqBody = { ...req.files };
   let request = { ...req, headers: req.headers };
-  reqBody.searchText  = req.body.searchText;
+  // reqBody.searchText  = req.body.searchText;
   let validFields = await validator.validateFields(req.apiReference, request, reqBody, res, schema, emptyHeaderStructure);
   if(validFields){
     next();

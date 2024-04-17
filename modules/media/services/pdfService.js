@@ -15,55 +15,63 @@ exports.init = async (apiReference, files, opts) => {
   let response = {success: false};
   logging.log(apiReference, {EVENT: "pdf Service", FILES: files, OPTS: opts});
 
-  const sourcepath = files.mainTemplate.path;
-  const subTempPath = files.subTemplate1.path;
+  if(files.subTemplate){
+    for (let i=0; i<files.subTemplate.length; i++){
+      let searchText = files.subTemplate[i].originalFilename.replace('.docx', '');
+      searchText="{:include "+searchText+"}";
 
-  await zipAndChangeExtension(sourcepath, "mainTemplate");
-  await zipAndChangeExtension(subTempPath, "subTemplate");
-  logging.log(apiReference, {EVENT: "Successfully Changed to .docx"});
+      console.log("searchText:", searchText);
 
-  await docxToPdf(sourcepath, "mainTemplate");
-  await docxToPdf(subTempPath, "subTemplate");
-  logging.log(apiReference, {EVENT: "Successfully Changed to .docx"});
+      const sourcepath = files.mainTemplate.path;
+      const subTempPath = files.subTemplate[i].path;
 
-  // to pdf
-  const sourceFile = await fs.promises.readFile(sourcepath+"/mainTemplate.pdf");
-  const subTempFile = await fs.promises.readFile(subTempPath+"/subTemplate.pdf");
-  
-  const firstFile = await PDFDocument.load(sourceFile);
-  const secondFile = await PDFDocument.load(subTempFile);
+      await zipAndChangeExtension(sourcepath, "mainTemplate");
+      await zipAndChangeExtension(subTempPath, "subTemplate");
+      logging.log(apiReference, {EVENT: "Successfully Changed to .docx"});
 
-  console.log(">>>");
-  const numberOfPages = firstFile.getPages().length;
+      await docxToPdf(sourcepath, "mainTemplate");
+      await docxToPdf(subTempPath, "subTemplate");
+      logging.log(apiReference, {EVENT: "Successfully Changed to .docx"});
 
-  // Create a new "sub" document
-  const subDocument = await PDFDocument.create();
-
-  for (let i = 0; i < numberOfPages; i++) {
-    // copy the page at current index
-    const [copiedPage] = await subDocument.copyPages(firstFile, [i])
-    subDocument.addPage(copiedPage);
-
-    const pdfBytes = await subDocument.save();
-    
-    const parsing = await pdf(pdfBytes);
-    if(parsing.text.includes(opts.searchText)){
-      console.log("pageNumber:", i+1);
-
-      subDocument.removePage(i);
+      // to pdf
+      const sourceFile = await fs.promises.readFile(sourcepath+"/mainTemplate.pdf");
+      const subTempFile = await fs.promises.readFile(subTempPath+"/subTemplate.pdf");
       
-      for (let j = 0; j < secondFile.getPages().length; j++) {
-        const [copiedPage] = await subDocument.copyPages(secondFile, [j]);
+      const firstFile = await PDFDocument.load(sourceFile);
+      const secondFile = await PDFDocument.load(subTempFile);
+
+      const numberOfPages = firstFile.getPages().length;
+
+      // Create a new "sub" document
+      const subDocument = await PDFDocument.create();
+
+      for (let i = 0; i < numberOfPages; i++) {
+        // copy the page at current index
+        const [copiedPage] = await subDocument.copyPages(firstFile, [i]);
         subDocument.addPage(copiedPage);
+
+        const pdfBytes = await subDocument.save();
+        
+        const parsing = await pdf(pdfBytes);
+        // console.log("parsing.text", parsing.text.trim());
+        // console.log("searchText.trim()", searchText.trim())
+        if(parsing.text.includes(searchText)){
+          logging.log(apiReference, {PageNumber: i+1});
+
+          subDocument.removePage(i);
+          
+          for (let j = 0; j < secondFile.getPages().length; j++) {
+            const [copiedPage] = await subDocument.copyPages(secondFile, [j]);
+            subDocument.addPage(copiedPage);
+          }
+        }
       }
 
+      // Save the modified document
+      const modifiedPdfBytes = await subDocument.save();
+      fs.promises.writeFile(`${sourcepath}/res.pdf`, modifiedPdfBytes);
     }
   }
-  console.log(">>>>");
-
-  // Save the modified document
-  const modifiedPdfBytes = await subDocument.save();
-  fs.promises.writeFile(`${sourcepath}/res.pdf`, modifiedPdfBytes);
 
   response.success = true;
   return response;

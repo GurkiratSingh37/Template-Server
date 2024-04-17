@@ -15,8 +15,9 @@ exports.fileUpload = async (apiReference, files, opts) => {
   logging.log(apiReference, { EVENT: "File Service", FILES: files, OPTS: opts });
 
   try{
-    if (requestFile.subTemplate) {
-      for (let i = 0; i < requestFile.subTemplate.length; i++) {
+    if (files.subTemplate) {
+      for (let i = 0; i < files.subTemplate.length; i++) {
+        const searchText = files.subTemplate[i].originalFilename.replace('.docx', '');
 
         const sourcepath = files.mainTemplate.path+"/word/document.xml";
         const content = await fs.readFile(sourcepath);
@@ -36,7 +37,7 @@ exports.fileUpload = async (apiReference, files, opts) => {
           }
           logging.log(apiReference, {EVENT: "mytext", TEXT: mytext});
       
-          if(mytext.includes(requestFile.subTemplate[i].originalFilename)){
+          if(mytext.includes(searchText)){
             logging.log(apiReference, {MY_TEXT: mytext});
       
             const attributes = {};
@@ -79,7 +80,7 @@ exports.fileUpload = async (apiReference, files, opts) => {
         wrFonts.setAttribute('w:cs', 'Times New Roman');
       
         const newt = mydoc.createElement('w:t');
-        const textValue = mydoc.createTextNode(opts.searchText);
+        const textValue = mydoc.createTextNode("{:include "+searchText+"}");
       
         rpr.appendChild(wrFonts);
         newr.appendChild(rpr);
@@ -123,7 +124,7 @@ exports.fileUpload = async (apiReference, files, opts) => {
     return response;
   }
   catch(err){
-    logging.logError(apiReference, {EVENT: "Error Occured in Service", ERROR: err})
+    logging.logError(apiReference, { EVENT: "Media Server ERROR", ERROR: err, STACK: err.stack });
     response.error = err;
     return response;
   }
